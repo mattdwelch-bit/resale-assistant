@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#1f2933" />
+  <title>Resale Assistant</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Resale Assistant</h1>
+    <p>Price items from real sold comps.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Item</h2>
+      <label>Item name<input id="itemName" placeholder="e.g., Vintage brass lamp" /></label>
+      <label>Category
+        <select id="category">
+          <option>Furniture</option><option>Housewares</option><option>Decor</option><option>Vinyl / Media</option><option>Tools</option><option>Clothing</option><option>Other</option>
+        </select>
+      </label>
+      <label>Condition
+        <select id="condition">
+          <option value="1">Excellent</option><option value="0.9">Very Good</option><option value="0.75">Good</option><option value="0.55">Fair / Needs Work</option>
+        </select>
+      </label>
+      <label>What would you pay?<input id="buyCost" type="number" inputmode="decimal" placeholder="0.00" /></label>
+      <label>Notes<textarea id="notes" placeholder="marks, damage, dimensions, missing parts..."></textarea></label>
+    </section>
+
+    <section class="card">
+      <h2>Sold Comps</h2>
+      <div id="comps"></div>
+      <button id="addComp" class="secondary">+ Add comp</button>
+    </section>
+
+    <section class="card result">
+      <h2>Recommendation</h2>
+      <div class="grid">
+        <div><span>Avg sold</span><strong id="avgSold">$0</strong></div>
+        <div><span>Quick sale</span><strong id="quickPrice">$0</strong></div>
+        <div><span>List price</span><strong id="listPrice">$0</strong></div>
+        <div><span>Hold-out</span><strong id="holdPrice">$0</strong></div>
+        <div><span>Max buy</span><strong id="maxBuy">$0</strong></div>
+        <div><span>Profit est.</span><strong id="profit">$0</strong></div>
+      </div>
+      <p id="buyCall" class="call">Add comps to get a recommendation.</p>
+      <button id="saveItem">Save item</button>
+      <button id="exportCsv" class="secondary">Export CSV</button>
+      <button id="clearForm" class="danger">Clear form</button>
+    </section>
+
+    <section class="card">
+      <h2>Saved Items</h2>
+      <div id="savedItems" class="saved"></div>
+    </section>
+  </main>
+
+  <template id="compTemplate">
+    <div class="comp">
+      <label>Sold price<input class="sold" type="number" inputmode="decimal" placeholder="0.00" /></label>
+      <label>Shipping<input class="ship" type="number" inputmode="decimal" placeholder="0.00" /></label>
+      <label>Match
+        <select class="match">
+          <option value="1">Very close</option><option value="0.85">Close</option><option value="0.65">Partial</option><option value="0.4">Weak</option>
+        </select>
+      </label>
+      <label>Source<input class="source" placeholder="eBay sold, WorthPoint..." /></label>
+      <button class="remove danger">Remove</button>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
