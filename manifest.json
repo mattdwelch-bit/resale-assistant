@@ -1,1 +1,9 @@
-{"name":"Resale Assistant","short_name":"Resale","start_url":"./index.html","display":"standalone","background_color":"#f5f1e8","theme_color":"#1f2933","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]}
+{
+  "name": "Resale Assistant",
+  "short_name": "Resale",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f5f1e8",
+  "theme_color": "#1f2933",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]
+}

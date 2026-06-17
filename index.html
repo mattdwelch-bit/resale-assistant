@@ -12,67 +12,97 @@
 </head>
 <body>
   <header>
+    <p class="eyebrow">Version 1.1</p>
     <h1>Resale Assistant</h1>
-    <p>Price items from real sold comps.</p>
+    <p>Capture, research, price, and track resale items.</p>
   </header>
 
   <main>
-    <section class="card">
-      <h2>Item</h2>
-      <label>Item name<input id="itemName" placeholder="e.g., Vintage brass lamp" /></label>
-      <label>Category
-        <select id="category">
-          <option>Furniture</option><option>Housewares</option><option>Decor</option><option>Vinyl / Media</option><option>Tools</option><option>Clothing</option><option>Other</option>
-        </select>
-      </label>
-      <label>Condition
-        <select id="condition">
-          <option value="1">Excellent</option><option value="0.9">Very Good</option><option value="0.75">Good</option><option value="0.55">Fair / Needs Work</option>
-        </select>
-      </label>
-      <label>What would you pay?<input id="buyCost" type="number" inputmode="decimal" placeholder="0.00" /></label>
-      <label>Notes<textarea id="notes" placeholder="marks, damage, dimensions, missing parts..."></textarea></label>
+    <nav class="tabs" aria-label="App sections">
+      <button class="tab active" data-view="newItemView">New Item</button>
+      <button class="tab" data-view="inventoryView">Inventory</button>
+    </nav>
+
+    <section id="newItemView" class="view active">
+      <section class="card hero-card">
+        <h2>1. Photos</h2>
+        <p class="hint">On iPhone, tap below to take photos. Start with front, bottom/mark, damage, and scale.</p>
+        <label class="photoButton" for="photoInput">📷 Take or add photos</label>
+        <input id="photoInput" type="file" accept="image/*" capture="environment" multiple hidden />
+        <div id="photoPreview" class="photoGrid"></div>
+      </section>
+
+      <section class="card">
+        <h2>2. Item Details</h2>
+        <label>Item name<input id="itemName" placeholder="e.g., Dansk teak ice bucket" /></label>
+        <label>Category
+          <select id="category">
+            <option>Furniture</option><option>Housewares</option><option>Decor</option><option>Lighting</option><option>Art</option><option>Vinyl / Media</option><option>Tools</option><option>Clothing</option><option>Other</option>
+          </select>
+        </label>
+        <div class="twoCol">
+          <label>Condition
+            <select id="condition">
+              <option value="1">Excellent</option><option value="0.9">Very Good</option><option value="0.75">Good</option><option value="0.55">Fair / Needs Work</option>
+            </select>
+          </label>
+          <label>What would you pay?<input id="buyCost" type="number" inputmode="decimal" placeholder="0.00" /></label>
+        </div>
+        <label>Where found
+          <select id="sourceFound">
+            <option>Garage Sale</option><option>Estate Sale</option><option>Thrift Store</option><option>Facebook Marketplace</option><option>Auction</option><option>Antique Mall</option><option>Other</option>
+          </select>
+        </label>
+        <label>Notes<textarea id="notes" placeholder="marks, damage, dimensions, missing parts, search terms..."></textarea></label>
+      </section>
+
+      <section class="card">
+        <h2>3. Sold Comps</h2>
+        <p class="hint">Use sold prices only. Add eBay, WorthPoint, auction, or Marketplace comps.</p>
+        <div id="comps"></div>
+        <button id="addComp" class="secondary">+ Add comp</button>
+      </section>
+
+      <section class="card result">
+        <h2>4. Recommendation</h2>
+        <div class="grid">
+          <div><span>Avg sold</span><strong id="avgSold">$0</strong></div>
+          <div><span>Quick sale</span><strong id="quickPrice">$0</strong></div>
+          <div><span>List price</span><strong id="listPrice">$0</strong></div>
+          <div><span>Hold-out</span><strong id="holdPrice">$0</strong></div>
+          <div><span>Max buy</span><strong id="maxBuy">$0</strong></div>
+          <div><span>Profit est.</span><strong id="profit">$0</strong></div>
+        </div>
+        <p id="buyCall" class="call">Add comps to get a recommendation.</p>
+        <button id="saveItem">Save item</button>
+        <button id="clearForm" class="danger">Clear form</button>
+      </section>
     </section>
 
-    <section class="card">
-      <h2>Sold Comps</h2>
-      <div id="comps"></div>
-      <button id="addComp" class="secondary">+ Add comp</button>
-    </section>
-
-    <section class="card result">
-      <h2>Recommendation</h2>
-      <div class="grid">
-        <div><span>Avg sold</span><strong id="avgSold">$0</strong></div>
-        <div><span>Quick sale</span><strong id="quickPrice">$0</strong></div>
-        <div><span>List price</span><strong id="listPrice">$0</strong></div>
-        <div><span>Hold-out</span><strong id="holdPrice">$0</strong></div>
-        <div><span>Max buy</span><strong id="maxBuy">$0</strong></div>
-        <div><span>Profit est.</span><strong id="profit">$0</strong></div>
-      </div>
-      <p id="buyCall" class="call">Add comps to get a recommendation.</p>
-      <button id="saveItem">Save item</button>
-      <button id="exportCsv" class="secondary">Export CSV</button>
-      <button id="clearForm" class="danger">Clear form</button>
-    </section>
-
-    <section class="card">
-      <h2>Saved Items</h2>
-      <div id="savedItems" class="saved"></div>
+    <section id="inventoryView" class="view">
+      <section class="card">
+        <div class="rowBetween">
+          <h2>Inventory</h2>
+          <button id="exportCsv" class="small secondary">Export CSV</button>
+        </div>
+        <div id="savedItems" class="saved"></div>
+      </section>
     </section>
   </main>
 
   <template id="compTemplate">
     <div class="comp">
-      <label>Sold price<input class="sold" type="number" inputmode="decimal" placeholder="0.00" /></label>
-      <label>Shipping<input class="ship" type="number" inputmode="decimal" placeholder="0.00" /></label>
+      <div class="twoCol">
+        <label>Sold price<input class="sold" type="number" inputmode="decimal" placeholder="0.00" /></label>
+        <label>Shipping<input class="ship" type="number" inputmode="decimal" placeholder="0.00" /></label>
+      </div>
       <label>Match
         <select class="match">
           <option value="1">Very close</option><option value="0.85">Close</option><option value="0.65">Partial</option><option value="0.4">Weak</option>
         </select>
       </label>
-      <label>Source<input class="source" placeholder="eBay sold, WorthPoint..." /></label>
-      <button class="remove danger">Remove</button>
+      <label>Source / notes<input class="source" placeholder="eBay sold, WorthPoint, auction..." /></label>
+      <button class="remove danger">Remove comp</button>
     </div>
   </template>
 
