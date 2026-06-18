@@ -2,9 +2,9 @@ const $ = id => document.getElementById(id);
 const comps = $('comps');
 const tpl = $('compTemplate');
 let saved = [];
-const APP_VERSION = '1.4.0';
-const STORAGE_KEY = 'resale_items_v140';
-const LEGACY_KEYS = ['resale_items_v131','resale_items_v121','resale_items'];
+const APP_VERSION = '1.5.0';
+const STORAGE_KEY = 'resale_items_v150';
+const LEGACY_KEYS = ['resale_items_v140','resale_items_v131','resale_items_v121','resale_items'];
 let photos = [];
 let editIndex = null;
 let detailIndex = null;
@@ -189,11 +189,15 @@ function currentItemFromForm(){
     condition:$('condition').value,
     buyCost:$('buyCost').value,
     sourceFound:$('sourceFound').value,
+    sourceArea:$('sourceArea')?.value || '',
+    confidence:$('confidence')?.value || 'Medium',
     purchaseDate:$('purchaseDate').value,
     purchaseLocation:$('purchaseLocation').value.trim(),
     status:$('status').value,
     listingPrice:$('listingPrice').value,
     listedWhere:$('listedWhere').value.trim(),
+    searchTerms:$('searchTerms')?.value.trim() || '',
+    researchNotes:$('researchNotes')?.value.trim() || '',
     actualSoldPrice:$('actualSoldPrice').value,
     actualFees:$('actualFees').value,
     notes:$('notes').value.trim(),
@@ -208,12 +212,16 @@ function fillForm(item){
   $('era').value=item.era||'Unknown / Not sure';
   $('condition').value=item.condition||'1';
   $('buyCost').value=item.buyCost||'';
-  $('sourceFound').value=item.sourceFound||'Garage Sale';
+  $('sourceFound').value=item.sourceFound||'Estate Sale';
+  if($('sourceArea')) $('sourceArea').value=item.sourceArea||'Garage';
+  if($('confidence')) $('confidence').value=item.confidence||'Medium';
   $('purchaseDate').value=item.purchaseDate||today();
   $('purchaseLocation').value=item.purchaseLocation||'';
   $('status').value=item.status||'Research Pending';
   $('listingPrice').value=item.listingPrice||'';
   $('listedWhere').value=item.listedWhere||'';
+  if($('searchTerms')) $('searchTerms').value=item.searchTerms||'';
+  if($('researchNotes')) $('researchNotes').value=item.researchNotes||'';
   $('actualSoldPrice').value=item.actualSoldPrice||'';
   $('actualFees').value=item.actualFees||'';
   $('notes').value=item.notes||'';
@@ -229,12 +237,14 @@ function resetForm(){
   $('formTitle').textContent='2. Item Details';
   $('saveItem').textContent='Save item';
   $('cancelEdit').hidden=true;
-  ['itemName','buyCost','notes','purchaseLocation','listingPrice','listedWhere','actualSoldPrice','actualFees'].forEach(id=>$(id).value='');
+  ['itemName','buyCost','notes','purchaseLocation','listingPrice','listedWhere','actualSoldPrice','actualFees','searchTerms','researchNotes'].forEach(id=>{ if($(id)) $(id).value=''; });
   $('purchaseDate').value=today();
   $('category').selectedIndex=0;
   $('era').selectedIndex=0;
   $('condition').selectedIndex=0;
   $('sourceFound').selectedIndex=0;
+  if($('sourceArea')) $('sourceArea').selectedIndex=0;
+  if($('confidence')) $('confidence').value='Medium';
   $('status').selectedIndex=0;
   photos=[]; renderPhotos();
   comps.innerHTML=''; addComp();
@@ -254,7 +264,7 @@ function renderSaved(){
   const q=($('inventorySearch')?.value||'').toLowerCase();
   const f=$('statusFilter')?.value||'';
   const filtered=saved.map((item,index)=>({item,index})).filter(({item})=>{
-    const hay=[item.name,item.category,item.era,item.status,item.purchaseLocation,item.notes].join(' ').toLowerCase();
+    const hay=[item.name,item.category,item.era,item.status,item.sourceFound,item.sourceArea,item.purchaseLocation,item.searchTerms,item.researchNotes,item.notes].join(' ').toLowerCase();
     return (!q || hay.includes(q)) && (!f || item.status===f);
   }).reverse();
   wrap.innerHTML=filtered.length?'':'<p>No matching saved items.</p>';
@@ -268,11 +278,11 @@ function renderSaved(){
         ${thumb}
         <div>
           <strong>${esc(item.name||'Untitled item')} — ${money(item.list)}</strong>
-          <small>${esc(item.category||'')}${item.era ? ' · '+esc(item.era) : ''} · Paid ${money(+item.buyCost||0)} · Max buy ${money(item.maxBuy)} · Profit ${money(profit)}</small>
+          <small>${esc(item.category||'')}${item.era ? ' · '+esc(item.era) : ''}${item.sourceArea ? ' · '+esc(item.sourceArea) : ''} · Paid ${money(+item.buyCost||0)} · Max buy ${money(item.maxBuy)} · Profit ${money(profit)}</small>
           <div class="${statusClass(item.status)}">${esc(item.status||'Research Pending')}</div>
         </div>
       </div>
-      <p>${item.purchaseLocation?'<b>Found:</b> '+esc(item.purchaseLocation)+'<br>':''}${item.listedWhere?'<b>Listed:</b> '+esc(item.listedWhere)+'<br>':''}${esc(item.notes||'')}</p>
+      <p>${item.sourceFound?'<b>Source:</b> '+esc(item.sourceFound)+' · '+esc(item.sourceArea||'')+'<br>':''}${item.purchaseLocation?'<b>Found:</b> '+esc(item.purchaseLocation)+'<br>':''}${item.searchTerms?'<b>Search:</b> '+esc(item.searchTerms)+'<br>':''}${item.listedWhere?'<b>Listed:</b> '+esc(item.listedWhere)+'<br>':''}${esc(item.notes||'')}</p>
       <div class="buttonRow"><button class="viewItem secondary" type="button">View</button><button class="editItem" type="button">Edit</button><button class="deleteItem" type="button">Delete</button></div>`;
     d.querySelector('.viewItem').onclick=()=>showDetail(index);
     d.querySelector('.editItem').onclick=()=>startEdit(index);
@@ -298,13 +308,14 @@ function showDetail(index){
     <div class="detailGrid">
       <div><span>Category</span><strong>${esc(item.category||'')}</strong></div>
       <div><span>Era</span><strong>${esc(item.era||'')}</strong></div>
+      <div><span>Source Area</span><strong>${esc(item.sourceArea||'')}</strong></div>
       <div><span>Paid</span><strong>${money(+item.buyCost||0)}</strong></div>
       <div><span>List</span><strong>${money(item.list)}</strong></div>
       <div><span>Avg sold</span><strong>${money(item.avg)}</strong></div>
       <div><span>Profit</span><strong>${money(profit)}</strong></div>
     </div>
     <p class="call">${esc(item.call||'')}</p>
-    <p>${item.purchaseDate?'<b>Purchased:</b> '+esc(item.purchaseDate)+'<br>':''}${item.sourceFound?'<b>Source:</b> '+esc(item.sourceFound)+'<br>':''}${item.purchaseLocation?'<b>Location:</b> '+esc(item.purchaseLocation)+'<br>':''}${item.listedWhere?'<b>Listed where:</b> '+esc(item.listedWhere)+'<br>':''}${esc(item.notes||'')}</p>
+    <p>${item.purchaseDate?'<b>Purchased:</b> '+esc(item.purchaseDate)+'<br>':''}${item.sourceFound?'<b>Source:</b> '+esc(item.sourceFound)+' / '+esc(item.sourceArea||'')+'<br>':''}${item.confidence?'<b>Confidence:</b> '+esc(item.confidence)+'<br>':''}${item.searchTerms?'<b>Search terms:</b> '+esc(item.searchTerms)+'<br>':''}${item.researchNotes?'<b>Research notes:</b> '+esc(item.researchNotes)+'<br>':''}${item.purchaseLocation?'<b>Location:</b> '+esc(item.purchaseLocation)+'<br>':''}${item.listedWhere?'<b>Listed where:</b> '+esc(item.listedWhere)+'<br>':''}${esc(item.notes||'')}</p>
     <h3>Comps</h3><ul>${compHtml}</ul>
     <div class="buttonRow"><button id="detailEdit">Edit item</button><button id="detailDelete" class="deleteItem">Delete item</button></div>`;
   $('detailEdit').onclick=()=>startEdit(index);
@@ -328,16 +339,16 @@ async function saveItem(){
 }
 
 function exportCsv(){
-  const rows=[['Date Added','Updated','Item','Category','Era','Condition','Where Found','Purchase Date','Purchase Location','Buy Cost','Status','Listing Price','Listed Where','Actual Sold Price','Actual Fees','Avg Sold','Quick Price','List Price','Hold Price','Max Buy','Profit','Recommendation','Notes','Photo Count']];
+  const rows=[['Date Added','Updated','Item','Category','Era','Condition','Source Type','Source Area','Research Date','Place / Sale','Buy Cost','Status','Listing Price','Listed Where','Search Terms','Research Notes','Confidence','Actual Sold Price','Actual Fees','Avg Sold','Quick Price','List Price','Hold Price','Max Buy','Profit','Recommendation','Notes','Photo Count']];
   saved.forEach(i=>{
     const actualProfit=(+i.actualSoldPrice||0)?(+i.actualSoldPrice||0)-(+i.actualFees||0)-(+i.buyCost||0):'';
-    rows.push([i.date,i.updated||'',i.name,i.category,i.era||'',i.conditionText,i.sourceFound,i.purchaseDate,i.purchaseLocation,i.buyCost,i.status,i.listingPrice,i.listedWhere,i.actualSoldPrice,i.actualFees,Math.round(i.avg),Math.round(i.quick),Math.round(i.list),Math.round(i.hold),Math.round(i.maxBuy),actualProfit===''?Math.round(i.profit):Math.round(actualProfit),i.call,i.notes,i.photos?.length||0]);
+    rows.push([i.date,i.updated||'',i.name,i.category,i.era||'',i.conditionText,i.sourceFound,i.sourceArea||'',i.purchaseDate,i.purchaseLocation,i.buyCost,i.status,i.listingPrice,i.listedWhere,i.searchTerms||'',i.researchNotes||'',i.confidence||'',i.actualSoldPrice,i.actualFees,Math.round(i.avg),Math.round(i.quick),Math.round(i.list),Math.round(i.hold),Math.round(i.maxBuy),actualProfit===''?Math.round(i.profit):Math.round(actualProfit),i.call,i.notes,i.photos?.length||0]);
   });
   const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='resale_items_v140.csv';
+  a.download='resale_items_v150.csv';
   a.click();
 }
 

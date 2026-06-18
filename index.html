@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#1f2933" />
   <title>Resale Assistant</title>
-  <link rel="manifest" href="manifest.json?v=1.4.0" />
-  <link rel="stylesheet" href="styles.css?v=1.4.0" />
+  <link rel="manifest" href="manifest.json?v=1.5.0" />
+  <link rel="stylesheet" href="styles.css?v=1.5.0" />
 </head>
 <body>
   <div id="updateBanner" class="updateBanner" hidden>
@@ -17,9 +17,9 @@
   </div>
 
   <header>
-    <p class="eyebrow"><span id="versionLabel">Version 1.4.0</span></p>
+    <p class="eyebrow"><span id="versionLabel">Version 1.5.0</span></p>
     <h1>Resale Assistant</h1>
-    <p>Capture, research, price, and track resale items.</p>
+    <p>Photograph, research, decide, and track resale finds.</p>
   </header>
 
   <main>
@@ -27,30 +27,30 @@
       <div class="rowBetween">
         <div>
           <strong>App status</strong>
-          <p id="appStatus" class="hint">Loaded Version 1.4.0</p>
+          <p id="appStatus" class="hint">Loaded Version 1.5.0</p>
         </div>
         <button id="forceRefresh" class="small secondary" type="button">Refresh App</button>
       </div>
     </section>
 
     <nav class="tabs" aria-label="App sections">
-      <button class="tab active" data-view="newItemView" type="button">New Item</button>
+      <button class="tab active" data-view="newItemView" type="button">Research Item</button>
       <button class="tab" data-view="inventoryView" type="button">Inventory</button>
       <button class="tab hiddenTab" data-view="detailView" type="button">Detail</button>
     </nav>
 
     <section id="newItemView" class="view active">
       <section class="card hero-card">
-        <h2>1. Photos</h2>
-        <p class="hint">On iPhone, tap below to take photos. Start with front, bottom/mark, damage, and scale.</p>
+        <h2>1. Research Photos</h2>
+        <p class="hint">Field workflow: start with the main item photo, then add maker mark, underside, damage, and scale photos.</p>
         <label class="photoButton" for="photoInput">📷 Take or add photos</label>
         <input id="photoInput" type="file" accept="image/*" capture="environment" multiple hidden />
         <div id="photoPreview" class="photoGrid"></div>
       </section>
 
       <section class="card">
-        <h2 id="formTitle">2. Item Details</h2>
-        <label>Item name<input id="itemName" placeholder="e.g., Dansk teak ice bucket" /></label>
+        <h2 id="formTitle">2. Quick Research</h2>
+        <label>Working item name<input id="itemName" placeholder="e.g., Dansk teak ice bucket" /></label>
         <div class="twoCol">
           <label>Category
             <select id="category">
@@ -69,17 +69,29 @@
               <option value="1">Excellent</option><option value="0.9">Very Good</option><option value="0.75">Good</option><option value="0.55">Fair / Needs Work</option>
             </select>
           </label>
-          <label>What would you pay?<input id="buyCost" type="number" inputmode="decimal" placeholder="0.00" /></label>
-        </div>
-        <div class="twoCol">
-          <label>Where found
-            <select id="sourceFound">
-              <option>Garage Sale</option><option>Estate Sale</option><option>Thrift Store</option><option>Facebook Marketplace</option><option>Auction</option><option>Antique Mall</option><option>Other</option>
+          <label>Research confidence
+            <select id="confidence">
+              <option>Low</option><option selected>Medium</option><option>High</option>
             </select>
           </label>
-          <label>Purchase date<input id="purchaseDate" type="date" /></label>
         </div>
-        <label>Purchase location<input id="purchaseLocation" placeholder="e.g., Central Neighborhood sale, Goodwill, estate sale address" /></label>
+        <div class="twoCol">
+          <label>Source type
+            <select id="sourceFound">
+              <option>Estate Sale</option><option>Garage Sale</option><option>Resale Store</option><option>Thrift Store</option><option>Facebook Marketplace</option><option>Auction</option><option>Antique Mall</option><option>Other</option>
+            </select>
+          </label>
+          <label>Area / route
+            <select id="sourceArea">
+              <option>Garage</option><option>Kitchen</option><option>Glassware / Serveware</option><option>High Value Case</option><option>Home Goods</option><option>Furniture</option><option>Basement</option><option>Records / Media</option><option>Christmas / Seasonal</option><option>Other</option>
+            </select>
+          </label>
+        </div>
+        <div class="twoCol">
+          <label>Research date<input id="purchaseDate" type="date" /></label>
+          <label>What would you pay?<input id="buyCost" type="number" inputmode="decimal" placeholder="0.00" /></label>
+        </div>
+        <label>Place / sale name<input id="purchaseLocation" placeholder="e.g., estate sale address, Goodwill, Wilson Antiques" /></label>
         <div class="twoCol">
           <label>Status
             <select id="status">
@@ -88,23 +100,25 @@
           </label>
           <label>Listing price<input id="listingPrice" type="number" inputmode="decimal" placeholder="0.00" /></label>
         </div>
+        <label>Suggested search terms<input id="searchTerms" placeholder="maker, pattern, material, era, dimensions..." /></label>
+        <label>Comparable price notes<textarea id="researchNotes" placeholder="Paste quick AI notes, eBay sold ranges, WorthPoint notes, or auction comps here..."></textarea></label>
         <label>Listed where<input id="listedWhere" placeholder="eBay, Facebook Marketplace, booth, consignment..." /></label>
         <div class="twoCol">
           <label>Actual sold price<input id="actualSoldPrice" type="number" inputmode="decimal" placeholder="0.00" /></label>
           <label>Actual fees<input id="actualFees" type="number" inputmode="decimal" placeholder="0.00" /></label>
         </div>
-        <label>Notes<textarea id="notes" placeholder="marks, damage, dimensions, missing parts, search terms..."></textarea></label>
+        <label>Field notes<textarea id="notes" placeholder="marks, damage, dimensions, missing parts, gut reaction..."></textarea></label>
       </section>
 
       <section class="card">
-        <h2>3. Sold Comps</h2>
+        <h2>3. Sold Comps / Price Evidence</h2>
         <p class="hint">Use sold prices only. Add eBay, WorthPoint, auction, or Marketplace comps.</p>
         <div id="comps"></div>
         <button id="addComp" class="secondary" type="button">+ Add comp</button>
       </section>
 
       <section class="card result">
-        <h2>4. Recommendation</h2>
+        <h2>4. Decision</h2>
         <div class="grid">
           <div><span>Avg sold</span><strong id="avgSold">$0</strong></div>
           <div><span>Quick sale</span><strong id="quickPrice">$0</strong></div>
@@ -160,6 +174,6 @@
     </div>
   </template>
 
-  <script src="app.js?v=1.4.0"></script>
+  <script src="app.js?v=1.5.0"></script>
 </body>
 </html>

@@ -1,5 +1,15 @@
 # Release Notes
 
+## 1.5.0
+- Reoriented the app around a research-first field workflow.
+- Renamed New Item flow to Research Item.
+- Added Source Type and Area / Route fields.
+- Added Suggested Search Terms, Research Notes, and Confidence.
+- Updated inventory, detail view, and CSV export for research workflow.
+- Kept Version 1.4 cache/update controls.
+
+# Release Notes
+
 ## 1.4.0
 - Added visible app version number.
 - Added App Status card.

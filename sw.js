@@ -1,6 +1,6 @@
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const CACHE = 'resale-assistant-v' + APP_VERSION;
-const ASSETS = ['./','./index.html','./styles.css?v=1.4.0','./app.js?v=1.4.0','./manifest.json?v=1.4.0','./icon.svg'];
+const ASSETS = ['./','./index.html','./styles.css?v=1.5.0','./app.js?v=1.5.0','./manifest.json?v=1.5.0','./icon.svg'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
