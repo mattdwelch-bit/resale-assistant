@@ -7,20 +7,36 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#1f2933" />
   <title>Resale Assistant</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.json?v=1.4.0" />
+  <link rel="stylesheet" href="styles.css?v=1.4.0" />
 </head>
 <body>
+  <div id="updateBanner" class="updateBanner" hidden>
+    <div><strong>New version available</strong><span>Tap update if the app looks stale.</span></div>
+    <button id="updateNow" type="button">Update Now</button>
+  </div>
+
   <header>
-    <p class="eyebrow">Version 1.2.1</p>
+    <p class="eyebrow"><span id="versionLabel">Version 1.4.0</span></p>
     <h1>Resale Assistant</h1>
     <p>Capture, research, price, and track resale items.</p>
   </header>
 
   <main>
+    <section class="card systemCard">
+      <div class="rowBetween">
+        <div>
+          <strong>App status</strong>
+          <p id="appStatus" class="hint">Loaded Version 1.4.0</p>
+        </div>
+        <button id="forceRefresh" class="small secondary" type="button">Refresh App</button>
+      </div>
+    </section>
+
     <nav class="tabs" aria-label="App sections">
-      <button class="tab active" data-view="newItemView">New Item</button>
-      <button class="tab" data-view="inventoryView">Inventory</button>
+      <button class="tab active" data-view="newItemView" type="button">New Item</button>
+      <button class="tab" data-view="inventoryView" type="button">Inventory</button>
+      <button class="tab hiddenTab" data-view="detailView" type="button">Detail</button>
     </nav>
 
     <section id="newItemView" class="view active">
@@ -33,7 +49,7 @@
       </section>
 
       <section class="card">
-        <h2>2. Item Details</h2>
+        <h2 id="formTitle">2. Item Details</h2>
         <label>Item name<input id="itemName" placeholder="e.g., Dansk teak ice bucket" /></label>
         <div class="twoCol">
           <label>Category
@@ -84,7 +100,7 @@
         <h2>3. Sold Comps</h2>
         <p class="hint">Use sold prices only. Add eBay, WorthPoint, auction, or Marketplace comps.</p>
         <div id="comps"></div>
-        <button id="addComp" class="secondary">+ Add comp</button>
+        <button id="addComp" class="secondary" type="button">+ Add comp</button>
       </section>
 
       <section class="card result">
@@ -98,8 +114,9 @@
           <div><span>Profit est.</span><strong id="profit">$0</strong></div>
         </div>
         <p id="buyCall" class="call">Add comps to get a recommendation.</p>
-        <button id="saveItem">Save item</button>
-        <button id="clearForm" class="danger">Clear form</button>
+        <button id="saveItem" type="button">Save item</button>
+        <button id="cancelEdit" class="secondary" type="button" hidden>Cancel edit</button>
+        <button id="clearForm" class="danger" type="button">Clear form</button>
       </section>
     </section>
 
@@ -107,9 +124,22 @@
       <section class="card">
         <div class="rowBetween">
           <h2>Inventory</h2>
-          <button id="exportCsv" class="small secondary">Export CSV</button>
+          <button id="exportCsv" class="small secondary" type="button">Export CSV</button>
+        </div>
+        <div class="filterRow">
+          <input id="inventorySearch" placeholder="Search inventory..." />
+          <select id="statusFilter">
+            <option value="">All statuses</option><option>Research Pending</option><option>Ready to List</option><option>Listed</option><option>Sold</option><option>Passed</option>
+          </select>
         </div>
         <div id="savedItems" class="saved"></div>
+      </section>
+    </section>
+
+    <section id="detailView" class="view">
+      <section class="card">
+        <button id="backToInventory" class="small secondary" type="button">← Back to inventory</button>
+        <div id="itemDetail"></div>
       </section>
     </section>
   </main>
@@ -126,10 +156,10 @@
         </select>
       </label>
       <label>Source / notes<input class="source" placeholder="eBay sold, WorthPoint, auction..." /></label>
-      <button class="remove danger">Remove comp</button>
+      <button class="remove danger" type="button">Remove comp</button>
     </div>
   </template>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=1.4.0"></script>
 </body>
 </html>

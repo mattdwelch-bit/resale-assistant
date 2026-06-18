@@ -1,24 +1,16 @@
 # Release Notes
 
+## 1.4.0
+- Added visible app version number.
+- Added App Status card.
+- Added Refresh App button.
+- Added update banner and Update Now button.
+- Changed service worker to network-first caching.
+- Added cache clearing support.
+- Cache-busted app file references with version numbers.
+
 ## 1.3.1
-- Fixed inventory persistence after closing/reopening the app by moving saved inventory to IndexedDB.
-- Updated service worker cache version so iPhone should receive the new files reliably.
+- Improved persistence using IndexedDB.
 
 ## 1.3
-- Added item detail screen
-- Added edit existing item workflow
-- Added save changes for existing items
-- Added back-to-inventory flow
-- Added inventory search
-- Added status filter
-- Added workflow notes folder
-
-## 1.2.1
-- Fixed purchase date/location layout
-- Added Era field
-- Added Era to inventory and CSV
-
-## 1.2
-- Added purchase tracking
-- Added listing and sold fields
-- Added actual profit calculation
+- Added item detail screen, editing, search, and status filter.

@@ -2,7 +2,9 @@ const $ = id => document.getElementById(id);
 const comps = $('comps');
 const tpl = $('compTemplate');
 let saved = [];
-const STORAGE_KEY = 'resale_items_v131';
+const APP_VERSION = '1.4.0';
+const STORAGE_KEY = 'resale_items_v140';
+const LEGACY_KEYS = ['resale_items_v131','resale_items_v121','resale_items'];
 let photos = [];
 let editIndex = null;
 let detailIndex = null;
@@ -148,14 +150,21 @@ async function loadSaved(){
   try{
     const fromIdb=await idbGet(STORAGE_KEY);
     if(Array.isArray(fromIdb)){ saved=fromIdb; return; }
-    const legacy=localStorage.getItem('resale_items');
-    if(legacy){
-      saved=JSON.parse(legacy) || [];
-      await persist();
-      return;
+
+    for(const key of LEGACY_KEYS){
+      const legacyIdb=await idbGet(key);
+      if(Array.isArray(legacyIdb)){ saved=legacyIdb; await persist(); return; }
     }
-    const newer=localStorage.getItem(STORAGE_KEY);
-    saved=newer ? JSON.parse(newer) : [];
+
+    for(const key of LEGACY_KEYS){
+      const raw=localStorage.getItem(key);
+      if(raw){
+        saved=JSON.parse(raw) || [];
+        await persist();
+        return;
+      }
+    }
+    saved=[];
   }catch(e){
     console.warn('Could not load saved inventory',e);
     saved=[];
@@ -328,7 +337,7 @@ function exportCsv(){
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='resale_items_v131.csv';
+  a.download='resale_items_v140.csv';
   a.click();
 }
 
@@ -349,6 +358,59 @@ async function init(){
   $('purchaseDate').value=today();
   addComp();
   renderSaved();
-  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+  setupUpdates();
 }
+
+async function clearAppCaches(){
+  if('caches' in window){
+    const keys=await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+  }
+}
+
+function showUpdateBanner(message='New version available'){
+  const banner=$('updateBanner');
+  banner.hidden=false;
+  banner.querySelector('strong').textContent=message;
+}
+
+function setupUpdates(){
+  $('versionLabel').textContent='Version '+APP_VERSION;
+  $('appStatus').textContent='Loaded Version '+APP_VERSION;
+  $('forceRefresh').onclick=async()=>{
+    $('appStatus').textContent='Refreshing app cache...';
+    await clearAppCaches();
+    if(navigator.serviceWorker?.controller){
+      navigator.serviceWorker.controller.postMessage({type:'CLEAR_CACHES'});
+    }
+    setTimeout(()=>location.reload(),350);
+  };
+  $('updateNow').onclick=async()=>{
+    $('appStatus').textContent='Updating app...';
+    await clearAppCaches();
+    if(window.__waitingWorker){ window.__waitingWorker.postMessage({type:'SKIP_WAITING'}); }
+    setTimeout(()=>location.reload(),500);
+  };
+
+  if(!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('sw.js?v='+APP_VERSION).then(reg=>{
+    if(reg.waiting){ window.__waitingWorker=reg.waiting; showUpdateBanner(); }
+    reg.addEventListener('updatefound',()=>{
+      const newWorker=reg.installing;
+      if(!newWorker) return;
+      newWorker.addEventListener('statechange',()=>{
+        if(newWorker.state==='installed' && navigator.serviceWorker.controller){
+          window.__waitingWorker=newWorker;
+          showUpdateBanner();
+        }
+      });
+    });
+    reg.update().catch(()=>{});
+  }).catch(()=>{});
+
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!window.__reloading){ window.__reloading=true; location.reload(); }
+  });
+}
+
 init();

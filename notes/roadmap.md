@@ -1,20 +1,17 @@
 # Resale Assistant Roadmap
 
 ## Current Version
-1.3 - Item detail, editing workflow, inventory search/filter
+1.4.0 - Update and cache management release
 
-## Next Release: 1.4
-- Better inventory sorting
-- Required-field warnings
-- Photo labels: front, mark, damage, scale
-- App settings screen
-- Backup/restore JSON export
+## Next Release: 1.5
+- Move toward modular project structure
+- Add better inventory sorting
+- Add backup/import tools
+- Improve photo handling and storage warnings
 
 ## Later
-- Search keyword generator
-- AI item identification from photo
-- Maker mark reading
-- Sold-price research assistant
-- Barcode scan
-- Cloud sync
-- Multi-device backup
+- Cloud database
+- Cloud photo storage
+- AI photo identification
+- Suggested search terms
+- Automated sold-price research
