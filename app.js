@@ -3,14 +3,18 @@ const comps = $('comps');
 const tpl = $('compTemplate');
 let saved = JSON.parse(localStorage.getItem('resale_items') || '[]');
 let photos = [];
+let editIndex = null;
+let detailIndex = null;
 
 function money(n){return '$' + (isFinite(n)?Math.round(n):0).toLocaleString();}
 function num(id){return +($(id)?.value || 0) || 0;}
 function today(){return new Date().toISOString().slice(0,10);}
+function esc(v){return String(v ?? '').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 
 function setView(viewId){
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id===viewId));
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===viewId));
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>setView(t.dataset.view)));
@@ -102,41 +106,14 @@ function calc(){
   return {avg,list,quick,hold,maxBuy,profit: actualSold ? actualProfit : estimatedProfit, actualProfit, vals, call};
 }
 
-function statusClass(status){
-  return 'status ' + String(status || '').toLowerCase().replaceAll(' ','-');
-}
+function statusClass(status){return 'status ' + String(status || '').toLowerCase().replaceAll(' ','-');}
+function persist(){localStorage.setItem('resale_items',JSON.stringify(saved));}
 
-function renderSaved(){
-  const wrap = $('savedItems');
-  wrap.innerHTML=saved.length?'':'<p>No saved items yet.</p>';
-  saved.slice().reverse().forEach((item,reverseIndex)=>{
-    const index = saved.length - 1 - reverseIndex;
-    const d=document.createElement('div');
-    d.className='savedItem';
-    const thumb = item.photos?.[0] ? `<img class="thumb" src="${item.photos[0]}" alt="${item.name||'Saved item'}">` : `<div class="thumb"></div>`;
-    const profit = item.actualSoldPrice ? (+item.actualSoldPrice||0)-(+item.actualFees||0)-(+item.buyCost||0) : item.profit;
-    d.innerHTML=`
-      <div class="savedItemHeader">
-        ${thumb}
-        <div>
-          <strong>${item.name||'Untitled item'} — ${money(item.list)}</strong>
-          <small>${item.category}${item.era ? ' · '+item.era : ''} · Paid ${money(+item.buyCost||0)} · Max buy ${money(item.maxBuy)} · Profit ${money(profit)}</small>
-          <div class="${statusClass(item.status)}">${item.status||'Research Pending'}</div>
-        </div>
-      </div>
-      <p>${item.purchaseLocation?'<b>Found:</b> '+item.purchaseLocation+'<br>':''}${item.listedWhere?'<b>Listed:</b> '+item.listedWhere+'<br>':''}${item.notes||''}</p>
-      <button class="deleteItem" type="button">Delete item</button>`;
-    d.querySelector('.deleteItem').onclick=()=>{
-      if(confirm('Delete this saved item?')){saved.splice(index,1);localStorage.setItem('resale_items',JSON.stringify(saved));renderSaved();}
-    };
-    wrap.appendChild(d);
-  });
-}
-
-function saveItem(){
+function currentItemFromForm(){
   const r=calc();
-  const item={
-    date:new Date().toISOString(),
+  return {
+    date: editIndex===null ? new Date().toISOString() : (saved[editIndex]?.date || new Date().toISOString()),
+    updated:new Date().toISOString(),
     name:$('itemName').value.trim(),
     category:$('category').value,
     era:$('era').value,
@@ -155,32 +132,35 @@ function saveItem(){
     photos:[...photos],
     ...r
   };
-  saved.push(item);
-  try{
-    localStorage.setItem('resale_items',JSON.stringify(saved));
-    renderSaved();
-    setView('inventoryView');
-  } catch(e){
-    alert('This item could not be saved. Try deleting a few photos or older saved items.');
-    saved.pop();
-  }
 }
 
-function exportCsv(){
-  const rows=[['Date Added','Item','Category','Era','Condition','Where Found','Purchase Date','Purchase Location','Buy Cost','Status','Listing Price','Listed Where','Actual Sold Price','Actual Fees','Avg Sold','Quick Price','List Price','Hold Price','Max Buy','Profit','Recommendation','Notes','Photo Count']];
-  saved.forEach(i=>{
-    const actualProfit=(+i.actualSoldPrice||0)?(+i.actualSoldPrice||0)-(+i.actualFees||0)-(+i.buyCost||0):'';
-    rows.push([i.date,i.name,i.category,i.era||'',i.conditionText,i.sourceFound,i.purchaseDate,i.purchaseLocation,i.buyCost,i.status,i.listingPrice,i.listedWhere,i.actualSoldPrice,i.actualFees,Math.round(i.avg),Math.round(i.quick),Math.round(i.list),Math.round(i.hold),Math.round(i.maxBuy),actualProfit===''?Math.round(i.profit):Math.round(actualProfit),i.call,i.notes,i.photos?.length||0]);
-  });
-  const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='resale_items_v121.csv';
-  a.click();
+function fillForm(item){
+  $('itemName').value=item.name||'';
+  $('category').value=item.category||'Furniture';
+  $('era').value=item.era||'Unknown / Not sure';
+  $('condition').value=item.condition||'1';
+  $('buyCost').value=item.buyCost||'';
+  $('sourceFound').value=item.sourceFound||'Garage Sale';
+  $('purchaseDate').value=item.purchaseDate||today();
+  $('purchaseLocation').value=item.purchaseLocation||'';
+  $('status').value=item.status||'Research Pending';
+  $('listingPrice').value=item.listingPrice||'';
+  $('listedWhere').value=item.listedWhere||'';
+  $('actualSoldPrice').value=item.actualSoldPrice||'';
+  $('actualFees').value=item.actualFees||'';
+  $('notes').value=item.notes||'';
+  photos=[...(item.photos||[])];
+  renderPhotos();
+  comps.innerHTML='';
+  (item.vals&&item.vals.length?item.vals:[{}]).forEach(addComp);
+  calc();
 }
 
-function clearForm(){
+function resetForm(){
+  editIndex=null;
+  $('formTitle').textContent='2. Item Details';
+  $('saveItem').textContent='Save item';
+  $('cancelEdit').hidden=true;
   ['itemName','buyCost','notes','purchaseLocation','listingPrice','listedWhere','actualSoldPrice','actualFees'].forEach(id=>$(id).value='');
   $('purchaseDate').value=today();
   $('category').selectedIndex=0;
@@ -192,12 +172,117 @@ function clearForm(){
   comps.innerHTML=''; addComp();
 }
 
+function startEdit(index){
+  editIndex=index;
+  fillForm(saved[index]);
+  $('formTitle').textContent='2. Edit Item';
+  $('saveItem').textContent='Save changes';
+  $('cancelEdit').hidden=false;
+  setView('newItemView');
+}
+
+function renderSaved(){
+  const wrap = $('savedItems');
+  const q=($('inventorySearch')?.value||'').toLowerCase();
+  const f=$('statusFilter')?.value||'';
+  const filtered=saved.map((item,index)=>({item,index})).filter(({item})=>{
+    const hay=[item.name,item.category,item.era,item.status,item.purchaseLocation,item.notes].join(' ').toLowerCase();
+    return (!q || hay.includes(q)) && (!f || item.status===f);
+  }).reverse();
+  wrap.innerHTML=filtered.length?'':'<p>No matching saved items.</p>';
+  filtered.forEach(({item,index})=>{
+    const d=document.createElement('div');
+    d.className='savedItem';
+    const thumb = item.photos?.[0] ? `<img class="thumb" src="${item.photos[0]}" alt="${esc(item.name||'Saved item')}">` : `<div class="thumb"></div>`;
+    const profit = item.actualSoldPrice ? (+item.actualSoldPrice||0)-(+item.actualFees||0)-(+item.buyCost||0) : item.profit;
+    d.innerHTML=`
+      <div class="savedItemHeader">
+        ${thumb}
+        <div>
+          <strong>${esc(item.name||'Untitled item')} — ${money(item.list)}</strong>
+          <small>${esc(item.category||'')}${item.era ? ' · '+esc(item.era) : ''} · Paid ${money(+item.buyCost||0)} · Max buy ${money(item.maxBuy)} · Profit ${money(profit)}</small>
+          <div class="${statusClass(item.status)}">${esc(item.status||'Research Pending')}</div>
+        </div>
+      </div>
+      <p>${item.purchaseLocation?'<b>Found:</b> '+esc(item.purchaseLocation)+'<br>':''}${item.listedWhere?'<b>Listed:</b> '+esc(item.listedWhere)+'<br>':''}${esc(item.notes||'')}</p>
+      <div class="buttonRow"><button class="viewItem secondary" type="button">View</button><button class="editItem" type="button">Edit</button><button class="deleteItem" type="button">Delete</button></div>`;
+    d.querySelector('.viewItem').onclick=()=>showDetail(index);
+    d.querySelector('.editItem').onclick=()=>startEdit(index);
+    d.querySelector('.deleteItem').onclick=()=>{
+      if(confirm('Delete this saved item?')){saved.splice(index,1);persist();renderSaved();}
+    };
+    wrap.appendChild(d);
+  });
+}
+
+function showDetail(index){
+  detailIndex=index;
+  const item=saved[index];
+  const profit = item.actualSoldPrice ? (+item.actualSoldPrice||0)-(+item.actualFees||0)-(+item.buyCost||0) : item.profit;
+  const photoHtml=(item.photos||[]).map((p,i)=>`<img src="${p}" alt="Photo ${i+1}">`).join('');
+  const compHtml=(item.vals||[]).map(c=>`<li>${money(+c.sold||0)} + ship ${money(+c.ship||0)} · match ${c.match} · ${esc(c.source||'')}</li>`).join('') || '<li>No comps saved.</li>';
+  $('itemDetail').innerHTML=`
+    <div class="detailHeader">
+      <h2>${esc(item.name||'Untitled item')}</h2>
+      <div class="${statusClass(item.status)}">${esc(item.status||'Research Pending')}</div>
+    </div>
+    <div class="detailPhotos">${photoHtml || '<div class="emptyPhoto">No photos</div>'}</div>
+    <div class="detailGrid">
+      <div><span>Category</span><strong>${esc(item.category||'')}</strong></div>
+      <div><span>Era</span><strong>${esc(item.era||'')}</strong></div>
+      <div><span>Paid</span><strong>${money(+item.buyCost||0)}</strong></div>
+      <div><span>List</span><strong>${money(item.list)}</strong></div>
+      <div><span>Avg sold</span><strong>${money(item.avg)}</strong></div>
+      <div><span>Profit</span><strong>${money(profit)}</strong></div>
+    </div>
+    <p class="call">${esc(item.call||'')}</p>
+    <p>${item.purchaseDate?'<b>Purchased:</b> '+esc(item.purchaseDate)+'<br>':''}${item.sourceFound?'<b>Source:</b> '+esc(item.sourceFound)+'<br>':''}${item.purchaseLocation?'<b>Location:</b> '+esc(item.purchaseLocation)+'<br>':''}${item.listedWhere?'<b>Listed where:</b> '+esc(item.listedWhere)+'<br>':''}${esc(item.notes||'')}</p>
+    <h3>Comps</h3><ul>${compHtml}</ul>
+    <div class="buttonRow"><button id="detailEdit">Edit item</button><button id="detailDelete" class="deleteItem">Delete item</button></div>`;
+  $('detailEdit').onclick=()=>startEdit(index);
+  $('detailDelete').onclick=()=>{ if(confirm('Delete this saved item?')){saved.splice(index,1);persist();renderSaved();setView('inventoryView');} };
+  setView('detailView');
+}
+
+function saveItem(){
+  const item=currentItemFromForm();
+  if(editIndex===null){ saved.push(item); }
+  else { saved[editIndex]=item; detailIndex=editIndex; }
+  try{
+    persist();
+    renderSaved();
+    const edited=editIndex;
+    resetForm();
+    if(edited===null) setView('inventoryView'); else showDetail(edited);
+  } catch(e){
+    alert('This item could not be saved. Try deleting a few photos or older saved items.');
+  }
+}
+
+function exportCsv(){
+  const rows=[['Date Added','Updated','Item','Category','Era','Condition','Where Found','Purchase Date','Purchase Location','Buy Cost','Status','Listing Price','Listed Where','Actual Sold Price','Actual Fees','Avg Sold','Quick Price','List Price','Hold Price','Max Buy','Profit','Recommendation','Notes','Photo Count']];
+  saved.forEach(i=>{
+    const actualProfit=(+i.actualSoldPrice||0)?(+i.actualSoldPrice||0)-(+i.actualFees||0)-(+i.buyCost||0):'';
+    rows.push([i.date,i.updated||'',i.name,i.category,i.era||'',i.conditionText,i.sourceFound,i.purchaseDate,i.purchaseLocation,i.buyCost,i.status,i.listingPrice,i.listedWhere,i.actualSoldPrice,i.actualFees,Math.round(i.avg),Math.round(i.quick),Math.round(i.list),Math.round(i.hold),Math.round(i.maxBuy),actualProfit===''?Math.round(i.profit):Math.round(actualProfit),i.call,i.notes,i.photos?.length||0]);
+  });
+  const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='resale_items_v13.csv';
+  a.click();
+}
+
 $('photoInput').addEventListener('change', e=>handlePhotos(e.target.files));
 ['condition','buyCost','listingPrice','actualSoldPrice','actualFees'].forEach(id=>$(id).addEventListener('input',calc));
 $('addComp').onclick=()=>addComp();
 $('saveItem').onclick=saveItem;
 $('exportCsv').onclick=exportCsv;
-$('clearForm').onclick=clearForm;
+$('clearForm').onclick=resetForm;
+$('cancelEdit').onclick=()=>{resetForm();setView('inventoryView');};
+$('backToInventory').onclick=()=>setView('inventoryView');
+$('inventorySearch').addEventListener('input',renderSaved);
+$('statusFilter').addEventListener('change',renderSaved);
 $('purchaseDate').value=today();
 addComp();
 renderSaved();

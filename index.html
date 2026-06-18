@@ -12,7 +12,7 @@
 </head>
 <body>
   <header>
-    <p class="eyebrow">Version 1.2.1</p>
+    <p class="eyebrow">Version 1.3</p>
     <h1>Resale Assistant</h1>
     <p>Capture, research, price, and track resale items.</p>
   </header>
@@ -21,6 +21,7 @@
     <nav class="tabs" aria-label="App sections">
       <button class="tab active" data-view="newItemView">New Item</button>
       <button class="tab" data-view="inventoryView">Inventory</button>
+      <button class="tab hiddenTab" data-view="detailView" hidden>Detail</button>
     </nav>
 
     <section id="newItemView" class="view active">
@@ -33,7 +34,7 @@
       </section>
 
       <section class="card">
-        <h2>2. Item Details</h2>
+        <div class="rowBetween"><h2 id="formTitle">2. Item Details</h2><button id="cancelEdit" class="small secondary" type="button" hidden>Cancel edit</button></div>
         <label>Item name<input id="itemName" placeholder="e.g., Dansk teak ice bucket" /></label>
         <div class="twoCol">
           <label>Category
@@ -109,7 +110,21 @@
           <h2>Inventory</h2>
           <button id="exportCsv" class="small secondary">Export CSV</button>
         </div>
+        <div class="filterRow">
+          <input id="inventorySearch" placeholder="Search inventory..." />
+          <select id="statusFilter">
+            <option value="">All statuses</option>
+            <option>Research Pending</option><option>Ready to List</option><option>Listed</option><option>Sold</option><option>Passed</option>
+          </select>
+        </div>
         <div id="savedItems" class="saved"></div>
+      </section>
+    </section>
+
+    <section id="detailView" class="view">
+      <section class="card">
+        <button id="backToInventory" class="small secondary" type="button">← Back to inventory</button>
+        <div id="itemDetail"></div>
       </section>
     </section>
   </main>
