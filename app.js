@@ -120,7 +120,7 @@ function renderSaved(){
         ${thumb}
         <div>
           <strong>${item.name||'Untitled item'} — ${money(item.list)}</strong>
-          <small>${item.category} · Paid ${money(+item.buyCost||0)} · Max buy ${money(item.maxBuy)} · Profit ${money(profit)}</small>
+          <small>${item.category}${item.era ? ' · '+item.era : ''} · Paid ${money(+item.buyCost||0)} · Max buy ${money(item.maxBuy)} · Profit ${money(profit)}</small>
           <div class="${statusClass(item.status)}">${item.status||'Research Pending'}</div>
         </div>
       </div>
@@ -139,6 +139,7 @@ function saveItem(){
     date:new Date().toISOString(),
     name:$('itemName').value.trim(),
     category:$('category').value,
+    era:$('era').value,
     conditionText:$('condition').selectedOptions[0].text,
     condition:$('condition').value,
     buyCost:$('buyCost').value,
@@ -166,16 +167,16 @@ function saveItem(){
 }
 
 function exportCsv(){
-  const rows=[['Date Added','Item','Category','Condition','Where Found','Purchase Date','Purchase Location','Buy Cost','Status','Listing Price','Listed Where','Actual Sold Price','Actual Fees','Avg Sold','Quick Price','List Price','Hold Price','Max Buy','Profit','Recommendation','Notes','Photo Count']];
+  const rows=[['Date Added','Item','Category','Era','Condition','Where Found','Purchase Date','Purchase Location','Buy Cost','Status','Listing Price','Listed Where','Actual Sold Price','Actual Fees','Avg Sold','Quick Price','List Price','Hold Price','Max Buy','Profit','Recommendation','Notes','Photo Count']];
   saved.forEach(i=>{
     const actualProfit=(+i.actualSoldPrice||0)?(+i.actualSoldPrice||0)-(+i.actualFees||0)-(+i.buyCost||0):'';
-    rows.push([i.date,i.name,i.category,i.conditionText,i.sourceFound,i.purchaseDate,i.purchaseLocation,i.buyCost,i.status,i.listingPrice,i.listedWhere,i.actualSoldPrice,i.actualFees,Math.round(i.avg),Math.round(i.quick),Math.round(i.list),Math.round(i.hold),Math.round(i.maxBuy),actualProfit===''?Math.round(i.profit):Math.round(actualProfit),i.call,i.notes,i.photos?.length||0]);
+    rows.push([i.date,i.name,i.category,i.era||'',i.conditionText,i.sourceFound,i.purchaseDate,i.purchaseLocation,i.buyCost,i.status,i.listingPrice,i.listedWhere,i.actualSoldPrice,i.actualFees,Math.round(i.avg),Math.round(i.quick),Math.round(i.list),Math.round(i.hold),Math.round(i.maxBuy),actualProfit===''?Math.round(i.profit):Math.round(actualProfit),i.call,i.notes,i.photos?.length||0]);
   });
   const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='resale_items_v12.csv';
+  a.download='resale_items_v121.csv';
   a.click();
 }
 
@@ -183,6 +184,7 @@ function clearForm(){
   ['itemName','buyCost','notes','purchaseLocation','listingPrice','listedWhere','actualSoldPrice','actualFees'].forEach(id=>$(id).value='');
   $('purchaseDate').value=today();
   $('category').selectedIndex=0;
+  $('era').selectedIndex=0;
   $('condition').selectedIndex=0;
   $('sourceFound').selectedIndex=0;
   $('status').selectedIndex=0;

@@ -12,7 +12,7 @@
 </head>
 <body>
   <header>
-    <p class="eyebrow">Version 1.2</p>
+    <p class="eyebrow">Version 1.2.1</p>
     <h1>Resale Assistant</h1>
     <p>Capture, research, price, and track resale items.</p>
   </header>
@@ -35,11 +35,18 @@
       <section class="card">
         <h2>2. Item Details</h2>
         <label>Item name<input id="itemName" placeholder="e.g., Dansk teak ice bucket" /></label>
-        <label>Category
-          <select id="category">
-            <option>Furniture</option><option>Housewares</option><option>Decor</option><option>Lighting</option><option>Art</option><option>Vinyl / Media</option><option>Tools</option><option>Clothing</option><option>Other</option>
-          </select>
-        </label>
+        <div class="twoCol">
+          <label>Category
+            <select id="category">
+              <option>Furniture</option><option>Housewares</option><option>Decor</option><option>Lighting</option><option>Art</option><option>Vinyl / Media</option><option>Tools</option><option>Clothing</option><option>Other</option>
+            </select>
+          </label>
+          <label>Era
+            <select id="era">
+              <option>Unknown / Not sure</option><option>Antique / Pre-1920</option><option>1920s-1930s</option><option>1940s</option><option>Mid-century / 1950s-1960s</option><option>1970s</option><option>1980s</option><option>1990s</option><option>Contemporary / 2000s+</option>
+            </select>
+          </label>
+        </div>
         <div class="twoCol">
           <label>Condition
             <select id="condition">
@@ -48,27 +55,27 @@
           </label>
           <label>What would you pay?<input id="buyCost" type="number" inputmode="decimal" placeholder="0.00" /></label>
         </div>
-        <label>Where found
-          <select id="sourceFound">
-            <option>Garage Sale</option><option>Estate Sale</option><option>Thrift Store</option><option>Facebook Marketplace</option><option>Auction</option><option>Antique Mall</option><option>Other</option>
-          </select>
-        </label>
         <div class="twoCol">
+          <label>Where found
+            <select id="sourceFound">
+              <option>Garage Sale</option><option>Estate Sale</option><option>Thrift Store</option><option>Facebook Marketplace</option><option>Auction</option><option>Antique Mall</option><option>Other</option>
+            </select>
+          </label>
           <label>Purchase date<input id="purchaseDate" type="date" /></label>
-          <label>Purchase location<input id="purchaseLocation" placeholder="e.g., Traverse City estate sale" /></label>
         </div>
-        <label>Status
-          <select id="status">
-            <option>Research Pending</option><option>Ready to List</option><option>Listed</option><option>Sold</option><option>Passed</option>
-          </select>
-        </label>
+        <label>Purchase location<input id="purchaseLocation" placeholder="e.g., Central Neighborhood sale, Goodwill, estate sale address" /></label>
         <div class="twoCol">
+          <label>Status
+            <select id="status">
+              <option>Research Pending</option><option>Ready to List</option><option>Listed</option><option>Sold</option><option>Passed</option>
+            </select>
+          </label>
           <label>Listing price<input id="listingPrice" type="number" inputmode="decimal" placeholder="0.00" /></label>
-          <label>Listed where<input id="listedWhere" placeholder="eBay, Marketplace, booth..." /></label>
         </div>
+        <label>Listed where<input id="listedWhere" placeholder="eBay, Facebook Marketplace, booth, consignment..." /></label>
         <div class="twoCol">
-          <label>Sold price<input id="actualSoldPrice" type="number" inputmode="decimal" placeholder="0.00" /></label>
-          <label>Sale fees<input id="actualFees" type="number" inputmode="decimal" placeholder="0.00" /></label>
+          <label>Actual sold price<input id="actualSoldPrice" type="number" inputmode="decimal" placeholder="0.00" /></label>
+          <label>Actual fees<input id="actualFees" type="number" inputmode="decimal" placeholder="0.00" /></label>
         </div>
         <label>Notes<textarea id="notes" placeholder="marks, damage, dimensions, missing parts, search terms..."></textarea></label>
       </section>
