@@ -1,7 +1,8 @@
 const $ = id => document.getElementById(id);
 const comps = $('comps');
 const tpl = $('compTemplate');
-let saved = JSON.parse(localStorage.getItem('resale_items') || '[]');
+let saved = [];
+const STORAGE_KEY = 'resale_items_v131';
 let photos = [];
 let editIndex = null;
 let detailIndex = null;
@@ -107,7 +108,65 @@ function calc(){
 }
 
 function statusClass(status){return 'status ' + String(status || '').toLowerCase().replaceAll(' ','-');}
-function persist(){localStorage.setItem('resale_items',JSON.stringify(saved));}
+
+function openItemsDb(){
+  return new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window)) return resolve(null);
+    const req=indexedDB.open('ResaleAssistantDB',1);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function idbGet(key){
+  const db=await openItemsDb();
+  if(!db) return null;
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('kv','readonly');
+    const req=tx.objectStore('kv').get(key);
+    req.onsuccess=()=>resolve(req.result || null);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function idbSet(key,value){
+  const db=await openItemsDb();
+  if(!db) throw new Error('IndexedDB unavailable');
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('kv','readwrite');
+    tx.objectStore('kv').put(value,key);
+    tx.oncomplete=()=>resolve();
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+
+async function loadSaved(){
+  try{
+    const fromIdb=await idbGet(STORAGE_KEY);
+    if(Array.isArray(fromIdb)){ saved=fromIdb; return; }
+    const legacy=localStorage.getItem('resale_items');
+    if(legacy){
+      saved=JSON.parse(legacy) || [];
+      await persist();
+      return;
+    }
+    const newer=localStorage.getItem(STORAGE_KEY);
+    saved=newer ? JSON.parse(newer) : [];
+  }catch(e){
+    console.warn('Could not load saved inventory',e);
+    saved=[];
+  }
+}
+
+async function persist(){
+  await idbSet(STORAGE_KEY,saved);
+  try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(saved.map(i=>({...i,photos:[]})))); }catch(e){}
+}
+
 
 function currentItemFromForm(){
   const r=calc();
@@ -208,8 +267,8 @@ function renderSaved(){
       <div class="buttonRow"><button class="viewItem secondary" type="button">View</button><button class="editItem" type="button">Edit</button><button class="deleteItem" type="button">Delete</button></div>`;
     d.querySelector('.viewItem').onclick=()=>showDetail(index);
     d.querySelector('.editItem').onclick=()=>startEdit(index);
-    d.querySelector('.deleteItem').onclick=()=>{
-      if(confirm('Delete this saved item?')){saved.splice(index,1);persist();renderSaved();}
+    d.querySelector('.deleteItem').onclick=async()=>{
+      if(confirm('Delete this saved item?')){saved.splice(index,1);await persist();renderSaved();}
     };
     wrap.appendChild(d);
   });
@@ -240,16 +299,16 @@ function showDetail(index){
     <h3>Comps</h3><ul>${compHtml}</ul>
     <div class="buttonRow"><button id="detailEdit">Edit item</button><button id="detailDelete" class="deleteItem">Delete item</button></div>`;
   $('detailEdit').onclick=()=>startEdit(index);
-  $('detailDelete').onclick=()=>{ if(confirm('Delete this saved item?')){saved.splice(index,1);persist();renderSaved();setView('inventoryView');} };
+  $('detailDelete').onclick=async()=>{ if(confirm('Delete this saved item?')){saved.splice(index,1);await persist();renderSaved();setView('inventoryView');} };
   setView('detailView');
 }
 
-function saveItem(){
+async function saveItem(){
   const item=currentItemFromForm();
   if(editIndex===null){ saved.push(item); }
   else { saved[editIndex]=item; detailIndex=editIndex; }
   try{
-    persist();
+    await persist();
     renderSaved();
     const edited=editIndex;
     resetForm();
@@ -269,21 +328,27 @@ function exportCsv(){
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='resale_items_v13.csv';
+  a.download='resale_items_v131.csv';
   a.click();
 }
 
-$('photoInput').addEventListener('change', e=>handlePhotos(e.target.files));
-['condition','buyCost','listingPrice','actualSoldPrice','actualFees'].forEach(id=>$(id).addEventListener('input',calc));
-$('addComp').onclick=()=>addComp();
-$('saveItem').onclick=saveItem;
-$('exportCsv').onclick=exportCsv;
-$('clearForm').onclick=resetForm;
-$('cancelEdit').onclick=()=>{resetForm();setView('inventoryView');};
-$('backToInventory').onclick=()=>setView('inventoryView');
-$('inventorySearch').addEventListener('input',renderSaved);
-$('statusFilter').addEventListener('change',renderSaved);
-$('purchaseDate').value=today();
-addComp();
-renderSaved();
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+
+
+async function init(){
+  await loadSaved();
+  $('photoInput').addEventListener('change', e=>handlePhotos(e.target.files));
+  ['condition','buyCost','listingPrice','actualSoldPrice','actualFees'].forEach(id=>$(id).addEventListener('input',calc));
+  $('addComp').onclick=()=>addComp();
+  $('saveItem').onclick=saveItem;
+  $('exportCsv').onclick=exportCsv;
+  $('clearForm').onclick=resetForm;
+  $('cancelEdit').onclick=()=>{resetForm();setView('inventoryView');};
+  $('backToInventory').onclick=()=>setView('inventoryView');
+  $('inventorySearch').addEventListener('input',renderSaved);
+  $('statusFilter').addEventListener('change',renderSaved);
+  $('purchaseDate').value=today();
+  addComp();
+  renderSaved();
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+}
+init();

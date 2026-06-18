@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.3.1
+- Fixed inventory persistence after closing/reopening the app by moving saved inventory to IndexedDB.
+- Updated service worker cache version so iPhone should receive the new files reliably.
+
 ## 1.3
 - Added item detail screen
 - Added edit existing item workflow
