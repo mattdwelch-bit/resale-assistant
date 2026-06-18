@@ -12,7 +12,7 @@
 </head>
 <body>
   <header>
-    <p class="eyebrow">Version 1.1</p>
+    <p class="eyebrow">Version 1.2</p>
     <h1>Resale Assistant</h1>
     <p>Capture, research, price, and track resale items.</p>
   </header>
@@ -53,6 +53,23 @@
             <option>Garage Sale</option><option>Estate Sale</option><option>Thrift Store</option><option>Facebook Marketplace</option><option>Auction</option><option>Antique Mall</option><option>Other</option>
           </select>
         </label>
+        <div class="twoCol">
+          <label>Purchase date<input id="purchaseDate" type="date" /></label>
+          <label>Purchase location<input id="purchaseLocation" placeholder="e.g., Traverse City estate sale" /></label>
+        </div>
+        <label>Status
+          <select id="status">
+            <option>Research Pending</option><option>Ready to List</option><option>Listed</option><option>Sold</option><option>Passed</option>
+          </select>
+        </label>
+        <div class="twoCol">
+          <label>Listing price<input id="listingPrice" type="number" inputmode="decimal" placeholder="0.00" /></label>
+          <label>Listed where<input id="listedWhere" placeholder="eBay, Marketplace, booth..." /></label>
+        </div>
+        <div class="twoCol">
+          <label>Sold price<input id="actualSoldPrice" type="number" inputmode="decimal" placeholder="0.00" /></label>
+          <label>Sale fees<input id="actualFees" type="number" inputmode="decimal" placeholder="0.00" /></label>
+        </div>
         <label>Notes<textarea id="notes" placeholder="marks, damage, dimensions, missing parts, search terms..."></textarea></label>
       </section>
 
